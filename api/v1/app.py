@@ -1,33 +1,29 @@
 #!/usr/bin/python3
-"""return the status of API"""
+""" Flask Api Application """
 import os
-from flask import Flask, jsonify
-from flask_cors import CORS
-
 from models import storage
 from api.v1.views import app_views
-
+from flask import Flask, make_response
+from flask import jsonify
 
 app = Flask(__name__)
-'''The Flask web application instance.'''
-app.url_map.strict_slashes = False
 app.register_blueprint(app_views)
-CORS(app, resources={"/*": {"origins": "0.0.0.0"}})
 
 
 @app.teardown_appcontext
-def app_teardown(exception):
-    """teardown context"""
+def shut_and_clear_everything(exception):
+    """ Closes Database and clears everything """
     storage.close()
 
 
 @app.errorhandler(404)
-def not_found(e):
-    """404 Handler"""
-    return jsonify(error="Not found"), 404
+def error_404_handler(error):
+    """ Handles 404 error response """
+    response = make_response(jsonify({'error': "Not found"}), 404)
+    return response
 
 
 if __name__ == "__main__":
-    host = getenv("HBNB_API_HOST") or "0.0.0.0"
-    port = getenv("HBNB_API_PORT") or 5000
+    port = int(os.getenv("HBNB_API_HOST", 5000))
+    host = os.getenv("HBNB_API_PORT", "0.0.0.0")
     app.run(host=host, port=port, threaded=True)
